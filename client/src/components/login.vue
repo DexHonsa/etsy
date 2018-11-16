@@ -1,7 +1,7 @@
 <template>
     <div style="position:relative; min-height:100vh">
         <div class="top">
-          <div class="loader-bar" :class="{
+          <div v-if="Object.keys(shop).length != 0" class="loader-bar" :class="{
             'p10':percentLoaded == 10,
             'p20':percentLoaded == 20,
             'p30':percentLoaded == 30,
@@ -12,7 +12,7 @@
             }"></div>
           <img style="height:45px; margin-right:10px;" src="../img/logo.png" alt=""> ShopButler &nbsp; {{message}}</div>
         <div  class="content container">
-          <div class="global-options-container" style="z-index:100000;">
+          <div v-if="Object.keys(shop).length != 0" class="global-options-container" style="z-index:100000;">
               <div class="date-selectors">
                   <div class="standard-input-item" :class="{'active':dateFrom.length != ''}">
                   <div class="date-picker-title" :class="{'active':dateFrom.length != ''}">Date From</div>
@@ -98,7 +98,7 @@
               >
         <div class="button-container">
           <div v-if="Object.keys(shop).length == 0" style="max-width:80%; width:100%; font-size:13pt; margin:15px; text-align:center;">
-          To Get Started, Link your Etsy Account to get sales information about your account.
+          To get started, link your Etsy account to get sales information about your account.
           </div>
           <button v-if="Object.keys(shop).length == 0" @click="submit"><i style="margin-right:10px;" class="fal fa-link"></i>  Link Etsy Account</button>
         </div>
