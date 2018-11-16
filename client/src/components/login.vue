@@ -100,7 +100,7 @@
           <div v-if="Object.keys(shop).length == 0" style="max-width:80%; width:100%; font-size:13pt; margin:15px; text-align:center;">
           To get started, link your Etsy account to get sales information about your account.
           </div>
-          <button v-if="Object.keys(shop).length == 0" @click="submit"><i style="margin-right:10px;" class="fal fa-link"></i>  Link Etsy Account</button>
+          <button v-if="Object.keys(shop).length == 0" @click="auth"><i style="margin-right:10px;" class="fal fa-link"></i>  Link Etsy Account</button>
         </div>
         </transition>
         <div class="terms">The term 'Etsy' is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy.</div>
@@ -140,6 +140,11 @@ export default {
     };
   },
   methods: {
+    auth() {
+      axios.get("/api/auth").then(res => {
+        window.location = res.data;
+      });
+    },
     changeDateFrom(date) {
       var n = new Date(date);
       n.setHours(0, 0, 0, 0);
