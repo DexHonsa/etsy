@@ -20,11 +20,13 @@
                   <th @click="sortBy('name')"  ><span class="header"> Name<i v-if="sortKey == 'name'" v-bind:class="{'fa fa-caret-down':!reverse,'fa fa-caret-up': reverse }"></i></span></th>
                   <th @click="sortBy('quantity')" ><span class="header"> Quantity <i v-if="sortKey == 'quantity'" v-bind:class="{'fa fa-caret-down':!reverse,'fa fa-caret-up': reverse }"></i></span></th>
                   <th @click="sortBy('adjusted_grandtotal')" ><span class="header"> Amount <i v-if="sortKey == 'adjusted_grandtotal'" v-bind:class="{'fa fa-caret-down':!reverse,'fa fa-caret-up': reverse }"></i></span></th>
+                  <th @click="sortBy('creation_tsz')" ><span class="header"> Date Created <i v-if="sortKey == 'creation_tsz'" v-bind:class="{'fa fa-caret-down':!reverse,'fa fa-caret-up': reverse }"></i></span></th>
                 </tr>
                 <tr v-for="(row, i) in orderedItems" :key="i">
                 <td>{{row.name}}</td>
                 <td>{{row.quantity}}</td>
                 <td>$ {{Number(row.adjusted_grandtotal).toFixed(2)}}</td>
+                <td>{{formatDate(row.creation_tsz)}}</td>
                   
                 </tr>
                
@@ -33,7 +35,7 @@
               </div>
               
               </div>
-              <div class="pages" v-if="receipts.length > 100">
+              <div class="pages" v-if="receipts.length > 99">
             Viewing {{orderedItems.length}} of {{receipts.length}}
                 <ul>
                   <li v-for="(page,i) in pageNumbers" :key="i" v-bind:class="{'active':checkActivePage(page)}" @click="activatePage(page)">{{page}}</li>
@@ -60,6 +62,30 @@ export default {
     };
   },
   methods: {
+    formatDate: function(date2) {
+      var date = new Date(0);
+      date.setUTCSeconds(date2);
+      var monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sept",
+        "Oct",
+        "Nov",
+        "Dec"
+      ];
+
+      var day = date.getDate();
+      var monthIndex = date.getMonth();
+      var year = date.getFullYear();
+
+      return monthNames[monthIndex] + " " + day + " " + year;
+    },
     checkActivePage(page) {
       if (page === this.pageActive) {
         return true;
@@ -204,6 +230,10 @@ export default {
   padding: 3px 15px;
   border-left: solid 1px rgb(226, 234, 236);
   font-size: 10pt;
+}
+.drill-metric-table td:first-child {
+  font-size: 12pt;
+  font-weight: bold;
 }
 .drill-metric-table td:first-of-type {
   border-left: none;

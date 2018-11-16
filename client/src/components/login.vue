@@ -1,10 +1,29 @@
 <template>
     <div style="position:relative; min-height:100vh">
         <div class="top">
-          <div class="loader-bar"></div>
+          <div class="loader-bar" :class="{
+            'p10':percentLoaded == 10,
+            'p20':percentLoaded == 20,
+            'p30':percentLoaded == 30,
+            'p40':percentLoaded == 40,
+            'p80':percentLoaded == 80,
+            'p90':percentLoaded == 90,
+            'p100':percentLoaded == 100
+            }"></div>
           <img style="height:45px; margin-right:10px;" src="../img/logo.png" alt=""> ShopButler &nbsp; {{message}}</div>
         <div  class="content container">
-            
+          <div class="global-options-container" style="z-index:100000;">
+              <div class="date-selectors">
+                  <div class="standard-input-item" :class="{'active':dateFrom.length != ''}">
+                  <div class="date-picker-title" :class="{'active':dateFrom.length != ''}">Date From</div>
+                  <datepicker @selected="changeDateFrom" :highlighted="highlighted" ref="date_from" name="date_from" :value="dateFrom"  input-class="standard-input date-input "></datepicker>
+                  </div>
+                  <div class="standard-input-item" :class="{'active':dateTo.length != ''}">
+                  <div class="date-picker-title" :class="{'active':dateTo.length != ''}">Date To</div>
+                  <datepicker @selected="changeDateTo" :highlighted="highlighted" ref="date_to" name="date_to" :value="dateTo"  input-class="standard-input date-input "></datepicker>
+                  </div>
+              </div>
+          </div>
             <div class="shop-title" v-if="Object.keys(shop).length > 0">
               <img style="width:100px; height:100px;" v-if="Object.keys(shop).length > 0" :src="shop.icon_url_fullxfull" alt="">
               <div class="shop-details">
@@ -17,9 +36,15 @@
               
               <div class="big-ticker">
                 <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
-                <div id="value0"></div>
+                <div v-if="allLoaded" id="value0"></div>
               </div>
-              <div class="big-ticker-title">Total Quantity Not Shipped</div>
+              <div class="big-ticker-title">Total Quantity Not Shipped</div><br>
+              <transition 
+              enter-active-class="fadeInUp"
+              leave-active-class="fadeInDown"
+              >
+              <button class="refresh animated-fast" v-if="allLoaded" @click="refresh">Refresh</button>
+              </transition>
             </div>
             
             <div v-if="Object.keys(shop).length != 0" class="receipts">
@@ -28,14 +53,14 @@
                 <div class="drill-metric">
                   <div class="drill-metric-title">Total Orders</div>
                   <div class="drill-metric-value">
-                    <div id="value1"></div>
+                    <div v-if="allLoaded" id="value1"></div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
                 </div>
                 <div class="drill-metric">
                   <div class="drill-metric-title">Orders Not Shipped</div>
                   <div class="drill-metric-value">
-                    <div id="value2"></div>
+                    <div v-if="allLoaded" id="value2"></div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
                   
@@ -43,7 +68,7 @@
                 <div class="drill-metric">
                   <div class="drill-metric-title">Total Quantity</div>
                   <div class="drill-metric-value">
-                    <div id="value3"></div>
+                    <div v-if="allLoaded" id="value3"></div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
                   
@@ -51,42 +76,33 @@
                 <div class="drill-metric">
                   <div class="drill-metric-title">Total Quantity Not Shipped</div>
                   <div class="drill-metric-value">
-                    <div id="value4"></div>
+                    <div v-if="allLoaded" id="value4"></div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
                  
                 </div>
-                <!-- <div class="drill-metric">
-                  <div class="drill-metric-title">Total Revenue</div>
-                  <div class="drill-metric-value">
-                    <div id="value5"></div>
-                    </div>
-                  
-                </div> -->
                 
-
               </div>
-              <!-- <div class="total">Total Orders: <span v-if="transLoaded">{{trans.length}}</span> <img class="spin" v-if="!transLoaded" src="../img/spinner.svg" alt=""></div>
-              <div class="total">Orders Not Shipped: <span v-if="receiptsLoaded">{{receipts.length}}</span> <img class="spin" v-if="!receiptsLoaded" src="../img/spinner.svg" alt=""></div>
-
-              <div class="total">Total Quantity To Date: <span v-if="transLoaded">{{totalQuantity}}</span> <img class="spin" v-if="!transLoaded" src="../img/spinner.svg" alt=""></div>
-              <div class="total">Total Quantity Not Shipped: <span v-if="quantityNotShippedLoaded">{{quantityNotShipped}}</span> <img class="spin" v-if="!quantityNotShippedLoaded" src="../img/spinner.svg" alt=""></div> -->
-              <Table v-if="transLoaded" :receipts="receipts"/>
-              <!-- <div class="receipt" v-for="(rec, i) in receipts" :key="i">
-
-                <div class="receipt-name">{{rec.name}}</div>
-                <div class="receipt-amount">$ {{rec.adjusted_grandtotal}}</div>
-                
-              </div> -->
+              <transition 
+              enter-active-class="fadeInUp"
+              leave-active-class="fadeInDown"
+              >
+              <Table v-if="transLoaded" :receipts="filteredReceipts"/>
+              </transition>
             </div>
              
         </div>
+        <transition 
+              enter-active-class="fadeInUp"
+              leave-active-class="fadeInDown"
+              >
         <div class="button-container">
           <div v-if="Object.keys(shop).length == 0" style="max-width:80%; width:100%; font-size:13pt; margin:15px; text-align:center;">
           To Get Started, Link your Etsy Account to get sales information about your account.
           </div>
           <button v-if="Object.keys(shop).length == 0" @click="submit"><i style="margin-right:10px;" class="fal fa-link"></i>  Link Etsy Account</button>
         </div>
+        </transition>
         <div class="terms">The term 'Etsy' is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy.</div>
        
     </div>
@@ -95,26 +111,50 @@
 import Table from "./sales_table";
 import axios from "axios";
 import Promise from "bluebird";
+import Datepicker from "vuejs-datepicker";
 import VueOdometer from "v-odometer/src";
+import moment from "moment";
 export default {
   name: "login",
   data() {
     return {
+      dateFrom: (() => moment().subtract(30, "days")._d)(),
+      dateTo: (() => moment()._d)(),
       allLoaded: false,
       message: "",
       user: {},
       shop: {},
       receipts: [],
       trans: [],
+      filteredReceipts: [],
+      filteredTrans: [],
       total: 0,
       totalQuantity: 0,
       receiptsLoaded: false,
       transLoaded: false,
       quantityNotShippedLoaded: false,
-      quantityNotShipped: 0
+      quantityNotShipped: 0,
+      percentLoaded: 0,
+      filteredReceipts: [],
+      filteredTrans: []
     };
   },
   methods: {
+    changeDateFrom(date) {
+      var n = new Date(date);
+      n.setHours(0, 0, 0, 0);
+      this.dateFrom = n;
+      this.submit();
+    },
+    changeDateTo(date) {
+      var n = new Date(date);
+      n.setHours(23, 59, 0, 0);
+      this.dateTo = n;
+      this.submit();
+    },
+    refresh() {
+      this.submit();
+    },
     addOdometer(val, index, theme) {
       var el = document.querySelector("#value" + index);
       var lowVal = Math.round(val / 2);
@@ -131,10 +171,12 @@ export default {
       el.innerHTML = Math.round(val * 10) / 10;
     },
     getOutstandingQuantity() {
-      var notShipped = this.receipts.map(a => {
+      var that = this;
+      var notShipped = this.filteredReceipts.map(a => {
         return a.receipt_id;
       });
       var newQuantity = 0;
+
       for (var i = 0; i < this.trans.length; i++) {
         if (notShipped.includes(this.trans[i].receipt_id)) {
           newQuantity += this.trans[i].quantity;
@@ -146,19 +188,21 @@ export default {
       for (var p = 0; p < notShipped.length; p++) {
         for (var k = 0; k < this.trans.length; k++) {
           if (this.trans[k].receipt_id == notShipped[p]) {
-            this.receipts[p].quantity = this.trans[k].quantity;
-            this.receipts[p].adjusted_grandtotal = Number(
-              this.receipts[p].adjusted_grandtotal
+            this.filteredReceipts[p].quantity = this.trans[k].quantity;
+            this.filteredReceipts[p].adjusted_grandtotal = Number(
+              this.filteredReceipts[p].adjusted_grandtotal
             );
           }
         }
       }
-      this.allLoaded = true;
-      this.addOdometer(this.quantityNotShipped, 0, "train-station");
-      this.addOdometer(this.trans.length, 1, "minimal");
-      this.addOdometer(this.receipts.length, 2, "minimal");
-      this.addOdometer(this.totalQuantity, 3, "minimal");
-      this.addOdometer(this.quantityNotShipped, 4, "minimal");
+      that.allLoaded = true;
+      setTimeout(function() {
+        that.addOdometer(that.quantityNotShipped, 0, "train-station");
+        that.addOdometer(that.filteredTrans.length, 1, "minimal");
+        that.addOdometer(that.filteredReceipts.length, 2, "minimal");
+        that.addOdometer(that.totalQuantity, 3, "minimal");
+        that.addOdometer(that.quantityNotShipped, 4, "minimal");
+      }, 100);
 
       //vendors.filter(vendor => (vendor.Name === "Magenic"));
 
@@ -186,14 +230,161 @@ export default {
       axiosInstance.interceptors.request.use(scheduler);
     },
     submit() {
-      axios.get("/api/auth").then(res => {
-        window.location = res.data;
-      });
+      this.allLoaded = false;
+      this.receiptsLoaded = false;
+      this.transLoaded = false;
+      this.percentLoaded = 0;
+
+      var that = this;
+      setTimeout(function() {
+        that.percentLoaded = 10;
+      }, 1000);
+      if (this.$route.query.token != null) {
+        var token = this.$route.query.token;
+        var secret = this.$route.query.secret;
+        var data = {
+          token,
+          secret
+        };
+        axios.post("/api/get_self", data).then(res => {
+          this.user = res.data.results[0];
+          var data2 = {
+            token,
+            secret,
+            userId: res.data.results[0].user_id
+          };
+          // console.log(res.data.results[0].user_id);
+
+          axios.post("/api/get_shops", data2).then(res2 => {
+            this.shop = res2.data.results[0];
+            var data3 = {
+              token,
+              secret,
+              shopId: res2.data.results[0].shop_id,
+              page: 1
+            };
+
+            //-------------RECEIPTS------------------------//
+            axios.post("/api/get_receipts", data3).then(res3 => {
+              var receipts = res3.data.results;
+              if (res3.data.count > 100) {
+                var promises = [];
+                var pages = Math.ceil(res3.data.count / 100);
+                var data4 = JSON.parse(JSON.stringify(data3));
+                for (var i = 2; i <= pages; i++) {
+                  data4.page = i;
+                  promises.push(
+                    axios.post("/api/get_receipts", {
+                      token: data4.token,
+                      secret: data4.secret,
+                      shopId: data4.shopId,
+                      page: i
+                    })
+                  );
+                }
+                Promise.map(
+                  promises,
+                  function(promise) {
+                    that.percentLoaded = 30;
+                    receipts.push(...promise.data.results);
+                  },
+                  { concurrency: 3 }
+                ).then(function() {
+                  that.receipts = receipts;
+                  var filteredReceipts = [];
+                  var to = new Date(that.dateTo);
+                  to = Math.floor(to.getTime() / 1000);
+                  var from = new Date(that.dateFrom);
+                  from = Math.floor(from.getTime() / 1000);
+
+                  for (var f = 0; f < receipts.length; f++) {
+                    if (
+                      receipts[f].creation_tsz < to &&
+                      receipts[f].creation_tsz > from
+                    ) {
+                      filteredReceipts.push(receipts[f]);
+                    } else {
+                      console.log(to);
+                      console.log(from);
+                      console.log(receipts[f].creation_tsz);
+                      console.log("-----");
+                    }
+                  }
+                  that.filteredReceipts = filteredReceipts;
+
+                  that.percentLoaded = 90;
+                  console.log("finished receipts");
+                  that.receiptsLoaded = true;
+                  //-------------TRANSACTIONS------------------------//
+                  axios.post("/api/get_trans", data3).then(res3 => {
+                    var trans = res3.data.results;
+                    if (res3.data.count > 100) {
+                      var promises = [];
+                      var pages = Math.ceil(res3.data.count / 100);
+                      var data4 = JSON.parse(JSON.stringify(data3));
+                      for (var i = 2; i <= pages; i++) {
+                        data4.page = i;
+                        promises.push(
+                          axios.post("/api/get_trans", {
+                            token: data4.token,
+                            secret: data4.secret,
+                            shopId: data4.shopId,
+                            page: i
+                          })
+                        );
+                      }
+                      Promise.map(
+                        promises,
+                        function(promise) {
+                          trans.push(...promise.data.results);
+                        },
+                        { concurrency: 3 }
+                      ).then(function() {
+                        that.percentLoaded = 100;
+                        that.trans = trans;
+
+                        //filter transactions by date
+                        var to = new Date(that.dateTo);
+                        to = Math.floor(to.getTime() / 1000);
+                        var from = new Date(that.dateFrom);
+                        from = Math.floor(from.getTime() / 1000);
+                        var filteredTrans = [];
+                        for (var f = 0; f < trans.length; f++) {
+                          if (
+                            trans[f].paid_tsz < to &&
+                            trans[f].paid_tsz > from
+                          ) {
+                            filteredTrans.push(trans[f]);
+                          }
+                        }
+                        that.filteredTrans = filteredTrans;
+
+                        console.log("finished Transactions");
+                        that.transLoaded = true;
+                        that.getSales();
+                        that.getOutstandingQuantity();
+                      });
+                    }
+
+                    // this.getTotals(receipts);
+                    // this.getSales(receipts);
+                  });
+                  //that.getSales();
+                });
+              }
+              // this.receipts = receipts;
+
+              // this.getTotals(receipts);
+              // this.getSales(receipts);
+            });
+          });
+        });
+      }
     },
     getSales() {
       var count = 0;
-      for (var i = 0; i < this.trans.length; i++) {
-        count += this.trans[i].quantity;
+      for (var i = 0; i < this.filteredTrans.length; i++) {
+        count += this.filteredTrans[i].quantity;
         this.totalQuantity = count;
       }
     },
@@ -224,149 +415,41 @@ export default {
             total += promise.data.results[i].quantity;
           }
           that.totalQuantity += total;
-
-          // console.log(promise);
-          // Promise.map awaits for returned promises as well.
-          // return fs.readFileAsync(fileName);
         },
         { concurrency: 3 }
       ).then(function() {
         console.log("done");
       });
 
-      // axios
-      //   .all(promises)
-      //   .then(
-      //     axios.spread((...args) => {
-      //       var totalQuantity = 0;
-      //       for (let i = 0; i < args.length; i++) {
-      //         if (args[i].data.results[0] == null) {
-      //           continue;
-      //         }
-      //         totalQuantity += args[i].data.results[0].quantity;
-      //         console.log(i);
-      //         this.receipts[i].quantity = args[i].data.results[0].quantity;
-      //       }
-      //       this.totalQuantity = totalQuantity;
-      //     })
-      //   )
-      //   .then(() => {
-      //     console.log("test");
-      //   });
-
       this.total = Math.round(totals);
     }
   },
   components: {
-    Table
+    Table,
+    Datepicker
   },
   mounted() {
-    var that = this;
-    if (this.$route.query.token != null) {
-      var token = this.$route.query.token;
-      var secret = this.$route.query.secret;
-      var data = {
-        token,
-        secret
-      };
-      axios.post("/api/get_self", data).then(res => {
-        this.user = res.data.results[0];
-        var data2 = {
-          token,
-          secret,
-          userId: res.data.results[0].user_id
+    this.submit();
+  },
+  computed: {
+    highlighted() {
+      if (this.dateTo == "") {
+        return {
+          from: this.dateFrom,
+          to: this.dateFrom
         };
-        // console.log(res.data.results[0].user_id);
-
-        axios.post("/api/get_shops", data2).then(res2 => {
-          this.shop = res2.data.results[0];
-          var data3 = {
-            token,
-            secret,
-            shopId: res2.data.results[0].shop_id,
-            page: 1
-          };
-
-          //-------------RECEIPTS------------------------//
-          axios.post("/api/get_receipts", data3).then(res3 => {
-            var receipts = res3.data.results;
-            if (res3.data.count > 100) {
-              var promises = [];
-              var pages = Math.ceil(res3.data.count / 100);
-              console.log(pages);
-              var data4 = JSON.parse(JSON.stringify(data3));
-              for (var i = 2; i <= pages; i++) {
-                data4.page = i;
-                promises.push(
-                  axios.post("/api/get_receipts", {
-                    token: data4.token,
-                    secret: data4.secret,
-                    shopId: data4.shopId,
-                    page: i
-                  })
-                );
-              }
-              Promise.map(
-                promises,
-                function(promise) {
-                  receipts.push(...promise.data.results);
-                },
-                { concurrency: 3 }
-              ).then(function() {
-                that.receipts = receipts;
-                // that.isLoaded = true;
-                console.log("finished receipts");
-                that.receiptsLoaded = true;
-                //-------------TRANSACTIONS------------------------//
-                axios.post("/api/get_trans", data3).then(res3 => {
-                  var trans = res3.data.results;
-                  if (res3.data.count > 100) {
-                    var promises = [];
-                    var pages = Math.ceil(res3.data.count / 100);
-                    console.log(pages);
-                    var data4 = JSON.parse(JSON.stringify(data3));
-                    for (var i = 2; i <= pages; i++) {
-                      data4.page = i;
-                      promises.push(
-                        axios.post("/api/get_trans", {
-                          token: data4.token,
-                          secret: data4.secret,
-                          shopId: data4.shopId,
-                          //offset: i*100 - 100,
-                          page: i
-                        })
-                      );
-                    }
-                    Promise.map(
-                      promises,
-                      function(promise) {
-                        trans.push(...promise.data.results);
-                      },
-                      { concurrency: 3 }
-                    ).then(function() {
-                      that.trans = trans;
-                      console.log("finished Transactions");
-                      that.transLoaded = true;
-                      that.getSales();
-                      that.getOutstandingQuantity();
-                    });
-                  }
-
-                  // this.getTotals(receipts);
-                  // this.getSales(receipts);
-                });
-                //that.getSales();
-              });
-            }
-            this.receipts = receipts;
-            // this.getTotals(receipts);
-            // this.getSales(receipts);
-          });
-        });
-      });
+      }
+      return {
+        from: this.dateFrom,
+        to: this.dateTo
+      };
+    },
+    disabled() {
+      return {
+        from: new Date()
+      };
     }
   },
-  computed: {},
   watch: {}
 };
 </script>
@@ -375,9 +458,41 @@ export default {
   height: 30px;
   margin-left: 15px;
 }
+.loader-bar {
+  background: #47c3ad;
+  height: 5px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: all 0.3s ease;
+  width: 0%;
+}
+.p10 {
+  width: 10%;
+}
+.p20 {
+  width: 20%;
+}
+.p30 {
+  width: 30%;
+}
+.p40 {
+  width: 40%;
+}
+.p80 {
+  width: 80%;
+}
+.p90 {
+  width: 90%;
+}
+.p100 {
+  width: 100%;
+}
+
 .top {
   font-size: 20pt;
   font-weight: lighter;
+  position: relative;
   color: #fff;
   background: #00000033;
   padding: 15px;
@@ -388,6 +503,7 @@ export default {
 .content {
   padding: 15px;
   font-size: 12pt;
+  position: relative;
   color: #fff;
 }
 button {
@@ -519,13 +635,14 @@ button:hover {
   font-size: 155pt;
   line-height: 200px;
   margin-bottom: 20px;
+  height: 236px;
 }
 .big-ticker-title {
   width: 100%;
   font-size: 20pt;
   text-align: center;
   color: #fff;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 @media (max-width: 750px) {
   .drill-metrics-container {
@@ -552,5 +669,52 @@ button:hover {
   bottom: 15px;
   font-size: 8pt;
   text-align: center;
+}
+.ticker-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.refresh {
+  margin-bottom: 50px;
+  display: inline-flex;
+}
+.date-picker-title {
+  position: absolute;
+  font-size: 11pt;
+  color: #657aaa;
+  height: 43px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  padding: 15px;
+}
+
+.standard-input-item:hover .date-picker-title {
+  color: #fff;
+}
+.date-picker-title.active {
+  color: #fff;
+  transform: scale(0.7, 0.7) translateY(-38px) translateX(-21px);
+}
+.standard-input-item.active .date-input {
+  border-color: #47c3ad;
+  box-shadow: 0px 0px 10px #47c3ad;
+}
+.standard-input-item {
+  margin-right: 10px !important;
+}
+.global-options-container {
+  height: 70px;
+  padding: 0px 15px;
+  padding-top: 12px;
+  position: absolute;
+  z-index: 10000000;
+  margin-bottom: 15px;
+  width: 100%;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
 }
 </style>
