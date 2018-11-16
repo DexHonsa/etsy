@@ -12,7 +12,7 @@
             }"></div>
           <img style="height:45px; margin-right:10px;" src="../img/logo.png" alt=""> ShopButler &nbsp; {{message}}</div>
         <div  class="content container">
-          <div v-if="Object.keys(shop).length != 0" class="global-options-container" style="z-index:100000;">
+          <div v-if="Object.keys(shop).length != 0 && $mq != 'sm'" class="global-options-container" style="z-index:100000;">
               <div class="date-selectors">
                   <div class="standard-input-item" :class="{'active':dateFrom.length != ''}">
                   <div class="date-picker-title" :class="{'active':dateFrom.length != ''}">Date From</div>
