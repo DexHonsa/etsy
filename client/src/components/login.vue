@@ -80,7 +80,7 @@
              
         </div>
         <div class="button-container">
-          <div style="max-width:80%; width:100%; font-size:13pt; margin:15px; text-align:center;">
+          <div v-if="Object.keys(shop).length == 0" style="max-width:80%; width:100%; font-size:13pt; margin:15px; text-align:center;">
           To Get Started, Link your Etsy Account to get sales information about your account.
           </div>
           <button v-if="Object.keys(shop).length == 0" @click="submit"><i style="margin-right:10px;" class="fal fa-link"></i>  Link Etsy Account</button>
