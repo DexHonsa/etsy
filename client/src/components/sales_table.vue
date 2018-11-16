@@ -1,10 +1,16 @@
 <template>
-<div style="display:flex; align-items:center; justify-content:center; min-height:200px">
+<div style="display:flex; align-items:center; justify-content:center; min-height:500px">
     <div v-if="!isLoaded"  style="background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; height:40px; width:40px; border-radius:5px;">
     <img style="width:20px;" src="../img/spinner.svg" alt="">
     </div>
-<div v-if="isLoaded" style=" width:100%;">
+<div v-if="isLoaded" style=" width:100%; text-align:center;">
     <div class="table-title">Non-Shipped Sales</div>
+    <div class="view-by">
+      <div @click="numberPerPage = 100" class="view-by-item" :class="{'active':numberPerPage == 100}">100</div>
+      <div @click="numberPerPage = 200" class="view-by-item" :class="{'active':numberPerPage == 200}">200</div>
+      <div @click="numberPerPage = 300" class="view-by-item" :class="{'active':numberPerPage == 300}">300</div>
+      <div @click="numberPerPage = 10000" class="view-by-item" :class="{'active':numberPerPage == 10000}">All</div>
+    </div>
     <div  class="drill-metric-table-wrapper">
         <div class="header-bg"></div>
                 <div class="drill-table">
@@ -49,7 +55,8 @@ export default {
       reverse: false,
       blank: false,
       pageNumbers: [],
-      pageActive: 1
+      pageActive: 1,
+      numberPerPage: 10000
     };
   },
   methods: {
@@ -63,7 +70,7 @@ export default {
     orderItems() {
       this.pageNumbers = [];
       var activePage = this.pageActive;
-      var numberPerPage = 100;
+      var numberPerPage = this.numberPerPage;
 
       var ordered = _.sortBy(this.receipts, this.sortKey);
       if (this.reverse) {
@@ -103,6 +110,11 @@ export default {
   computed: {
     orderedItems: function() {
       return this.orderItems();
+    }
+  },
+  watch: {
+    numberPerPage() {
+      this.orderItems();
     }
   },
   mounted() {}
@@ -147,17 +159,20 @@ export default {
   width: 100%;
 }
 .drill-table {
-  max-height: 320px;
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
+  max-height: calc(500px - 50px);
   margin-top: 30px;
 }
 .drill-metric-table-wrapper {
   position: relative;
   border: solid 1px #e2eaec;
-  max-height: 350px;
+  max-height: 500px;
   overflow-y: hidden;
+
+  display: inline-block;
+  width: 100%;
   overflow-x: hidden;
 }
 .table-title {
@@ -212,5 +227,21 @@ export default {
 .header:hover {
   cursor: pointer;
   color: #fff;
+}
+.view-by {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+.view-by-item {
+  padding: 0px 10px;
+  color: #fff;
+}
+.view-by-item:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+.view-by-item.active {
+  text-decoration: underline;
 }
 </style>

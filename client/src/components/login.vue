@@ -1,6 +1,8 @@
 <template>
-    <div>
-        <div class="top">Etsy Store Helper &nbsp; {{message}}</div>
+    <div style="position:relative; min-height:100vh">
+        <div class="top">
+          <div class="loader-bar"></div>
+          <img style="height:45px; margin-right:10px;" src="../img/logo.png" alt=""> ShopButler &nbsp; {{message}}</div>
         <div  class="content container">
             
             <div class="shop-title" v-if="Object.keys(shop).length > 0">
@@ -85,6 +87,7 @@
           </div>
           <button v-if="Object.keys(shop).length == 0" @click="submit"><i style="margin-right:10px;" class="fal fa-link"></i>  Link Etsy Account</button>
         </div>
+        <div class="terms">The term 'Etsy' is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy.</div>
        
     </div>
 </template>
@@ -541,5 +544,13 @@ button:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.terms {
+  width: 100%;
+  padding: 15px;
+  position: absolute;
+  bottom: 15px;
+  font-size: 8pt;
+  text-align: center;
 }
 </style>
