@@ -399,7 +399,7 @@ button {
   padding: 15px 55px;
   cursor: pointer;
   border: none;
-  outline: none;
+  outline: none !important;
 }
 button:hover {
   background: #38ad98;
