@@ -1,0 +1,140 @@
+@import url("https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700");
+
+@font-face {
+  font-family: "gotham";
+  font-weight: 400;
+  src: url(../fonts/GothamRounded-Book.otf);
+}
+
+@font-face {
+  font-family: "FontAwesome";
+  src: url(../fonts/FontAwesome.otf);
+}
+
+@font-face {
+  font-family: "gotham";
+  font-weight: 300;
+  src: url(../fonts/GothamRounded-Light.otf);
+}
+
+@font-face {
+  font-family: "gotham";
+  font-weight: 500;
+  src: url(../fonts/GothamRounded-Medium.otf);
+}
+
+@font-face {
+  font-family: "gotham";
+  font-weight: 600;
+  src: url(../fonts/GothamRounded-Bold.otf);
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1430px;
+  }
+}
+:root {
+  --main-bg-color: coral;
+  --main-txt-color: blue;
+  --input-border-radius: 100px;
+  --input-font-size: 10pt;
+}
+.custom-icon {
+  width: 31px;
+  padding: 5px;
+  margin-right: 0px;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+}
+
+.control-panel {
+  width: 92%;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+  transform: translateY(-34%);
+}
+
+.control-panel.collapsed {
+  width: 100%;
+}
+
+html,
+body {
+  background: linear-gradient(90deg, #07325d, #1b1230);
+  /* background: #fff; */
+  color: #fff;
+  font-family: "gotham";
+  font-weight: 300;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+body.pick {
+  cursor: crosshair !important;
+}
+label {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+input:focus {
+  outline: none;
+}
+
+/* input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px white inset;
+} */
+
+select:focus {
+  outline: none;
+}
+
+a {
+  text-decoration: none !important;
+  color: inherit;
+}
+
+a:hover {
+  color: inherit;
+}
+/* width */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* Track */
+
+::-webkit-scrollbar-track {
+  background: #07325d;
+}
+
+::-webkit-scrollbar:hover {
+  width: 10px;
+}
+
+/* Handle */
+
+::-webkit-scrollbar-thumb {
+  background: #47c3ad99;
+}
+
+/* Handle on hover */
+
+::-webkit-scrollbar-thumb:hover {
+  background: #47c3ad;
+}
