@@ -3,7 +3,9 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import VueMq from "vue-mq";
+import VeeValidate from "vee-validate";
 
+Vue.use(VeeValidate, { inject: false });
 Vue.use(VueMq, {
   breakpoints: {
     sm: 728,

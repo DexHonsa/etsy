@@ -274,4 +274,13 @@ export default {
 .view-by-item.active {
   text-decoration: underline;
 }
+@media (max-width: 728px) {
+  .drill-metric-table td:first-child {
+    font-size: 8pt;
+  }
+
+  .drill-metric-table td {
+    padding: 4px 0px;
+  }
+}
 </style>
