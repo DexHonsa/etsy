@@ -74,7 +74,7 @@ app.get("/api/auth", function(req, res) {
   if (!req.session.oauth.access_token) {
     res.redirect("/api/get-access-token");
   } else {
-    test(req, res);
+    // test(req, res);
   }
 });
 

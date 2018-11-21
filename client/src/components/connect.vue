@@ -516,18 +516,22 @@ export default {
     },
     totalRevenue() {
       var revenue = 0;
-      for (var i = 0; i < this.filteredReceipts.length; i++) {
-        var listings = this.$store.state.userStore.userElement.listings;
-        var listing = listings.filter(list => {
-          return list.listing_id === this.filteredReceipts[i].listing_id;
-        });
+      if (this.$store.state.userStore.userElement.listings != null) {
+        for (var i = 0; i < this.filteredReceipts.length; i++) {
+          var listings = this.$store.state.userStore.userElement.listings;
+          var listing = listings.filter(list => {
+            return list.listing_id === this.filteredReceipts[i].listing_id;
+          });
 
-        revenue +=
-          Number(this.filteredReceipts[i].adjusted_grandtotal) -
-          Number(listing[0].production_cost) *
-            Number(this.filteredReceipts[i].quantity);
+          revenue +=
+            Number(this.filteredReceipts[i].adjusted_grandtotal) -
+            Number(listing[0].production_cost) *
+              Number(this.filteredReceipts[i].quantity);
+        }
+        return Number(Math.round(revenue).toFixed(0));
+      } else {
+        return this.totalSales;
       }
-      return Number(Math.round(revenue).toFixed(0));
     },
     dateFrom() {
       return this.$store.state.dateFrom;
