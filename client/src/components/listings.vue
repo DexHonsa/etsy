@@ -53,7 +53,8 @@ export default {
             return {
               listing_id: list.listing_id,
               title: list.title,
-              price: list.price
+              price: list.price,
+              production_cost: 0
             };
           });
           this.updateUser({ listings: userListings }).then(() => {
