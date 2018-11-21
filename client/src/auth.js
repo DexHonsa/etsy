@@ -1,6 +1,7 @@
 import axios from "axios";
 import jwt_decode from "jwt-decode";
 import store from "./store";
+
 export default {
   user: {
     authenticated: false
@@ -14,6 +15,7 @@ export default {
 
           var decoded = jwt_decode(res.data.token);
           store.dispatch("setUser", decoded);
+          store.dispatch("getUser");
           resolve(decoded);
         },
         err => {
@@ -46,5 +48,22 @@ export default {
     setTimeout(() => {
       window.location.reload();
     }, 200);
+  },
+  unlinkAccount(){
+    return new Promise((resolve, reject)=>{
+      var data = {
+        userId:store.state.userStore.user.id,
+        update:{
+          token:null,
+          secret:null
+        }
+      }
+      axios.put("/api/update_user",data).then(()=>{
+        resolve();
+      }, ()=>{
+        reject();
+      })
+    })
+    
   }
 };

@@ -5,7 +5,9 @@ import userStore from "./user";
 import moment from "moment";
 
 Vue.use(Vuex);
-
+var today = new Date();
+var monthAgo = new Date().setDate(today.getDate()-30);
+monthAgo = new Date(monthAgo);
 function initialState() {
   return {
     percentLoaded: 0,
@@ -13,8 +15,8 @@ function initialState() {
     user: {},
     quantity: 0,
     activeListings: [],
-    dateFrom: (() => moment().subtract(30, "days")._d)(),
-    dateTo: (() => moment()._d)()
+    dateFrom: monthAgo,
+    dateTo: today
   };
 }
 
@@ -25,8 +27,8 @@ export default new Vuex.Store({
     user: {},
     quantity: 0,
     activeListings: [],
-    dateFrom: (() => moment().subtract(30, "days")._d)(),
-    dateTo: (() => moment()._d)()
+    dateFrom: monthAgo,
+    dateTo: today
   },
   modules: {
     userStore

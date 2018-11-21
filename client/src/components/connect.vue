@@ -2,7 +2,7 @@
     <div style="position:relative; min-height:100vh">
         
         <div class="content container">
-          <div v-if="Object.keys(shop).length != 0 && $mq != 'sm'" class="global-options-container" style="z-index:100000;">
+          <div v-if="Object.keys(shop).length != 0" class="global-options-container" style="z-index:100000;">
               <div class="date-selectors">
                   <div class="standard-input-item" :class="{'active':dateFrom.length != ''}">
                   <div class="date-picker-title" :class="{'active':dateFrom.length != ''}">Date From</div>
@@ -61,35 +61,34 @@
 
               <div class="drill-metrics-container">
                 <div class="drill-metric">
-                  <div class="drill-metric-title"> Orders</div>
+                  <div class="drill-metric-title">Total Orders</div>
                   <div class="drill-metric-value">
-                    <div v-if="allLoaded" id="value1">100</div>
+                    <div v-if="allLoaded" id="value1">{{this.receipts.length}}</div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
                 </div>
                 <div class="drill-metric">
-                  <div class="drill-metric-title">Orders Not Shipped</div>
+                  <div class="drill-metric-title">Orders</div>
                   <div class="drill-metric-value">
-                    <div v-if="allLoaded" id="value2">100</div>
+                    <div v-if="allLoaded" id="value2">{{this.filteredReceipts.length}}</div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
                   
                 </div>
                 <div class="drill-metric">
-                  <div class="drill-metric-title">Total Quantity</div>
+                  <div class="drill-metric-title">Total Sales</div>
                   <div class="drill-metric-value">
-                    <div v-if="allLoaded" id="value3">100</div>
+                    <div v-if="allLoaded" id="value3">$ {{totalSales.toLocaleString()}}</div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
-                  
                 </div>
+
                 <div class="drill-metric">
-                  <div class="drill-metric-title">Total Quantity Not Shipped</div>
+                  <div class="drill-metric-title">Total Revenue</div>
                   <div class="drill-metric-value">
-                    <div v-if="allLoaded" id="value4">100</div>
+                    <div v-if="allLoaded" id="value4">$ {{totalRevenue.toLocaleString()}}</div>
                     <img class="spin" v-if="!allLoaded" src="../img/spinner.svg" alt="">
                     </div>
-                 
                 </div>
                 
               </div>
@@ -133,9 +132,9 @@ export default {
     return {
       allLoaded: false,
       message: "",
-      userId: "",
+      etsyId: "",
       shopId: "",
-      user: {},
+      etsyUser: {},
       receipts: [],
       all_receipts: [],
       viewing_all_receipts: true,
@@ -150,24 +149,53 @@ export default {
     };
   },
   mounted() {
-    if (Object.keys(this.shop).length == 0) {
-      this.getSelf().then(() => {
-        this.getShop().then(() => {
-          this.getAllReceipts().then(() => {
-            this.getAllTransactions().then(() => {
-              this.filterReceipts();
-              this.filterTransactions();
-              this.getSales();
-              this.getQuantity();
+    var that = this;
+    this.setPercentLoaded(0);
+    if (this.user.token != null) {
+      this.$router.push({
+        query: { token: this.user.token, secret: this.user.secret }
+      });
+      // if (Object.keys(this.shop).length == 0) {
+      init();
+      // } else {
+      //   this.allLoaded = true;
+      //   setTimeout(() => {
+      //     this.addOdometer(this.quantity, 0, "train-station");
+      //   }, 100);
+      // }
+    } else {
+      //if (Object.keys(this.shop).length == 0) {
+      init();
+      // } else {
+      //   this.allLoaded = true;
+      //   setTimeout(() => {
+      //     this.addOdometer(this.quantity, 0, "train-station");
+      //   }, 100);
+      // }
+    }
+
+    function init() {
+      that.getSelf().then(() => {
+        that.getShop().then(() => {
+          if (that.user.token == null) {
+            that.updateUser({
+              userId: that.user.id,
+              update: {
+                token: that.token,
+                secret: that.secret
+              }
+            });
+          }
+          that.getAllReceipts().then(() => {
+            that.getAllTransactions().then(() => {
+              that.filterReceipts();
+              that.filterTransactions();
+              that.getSales();
+              that.getQuantity();
             });
           });
         });
       });
-    } else {
-      this.allLoaded = true;
-      setTimeout(() => {
-        this.addOdometer(this.quantity, 0, "train-station");
-      }, 100);
     }
   },
   methods: {
@@ -176,8 +204,15 @@ export default {
       "setShop",
       "setQuantity",
       "setDateFrom",
-      "setDateTo"
+      "setDateTo",
+      "getUser"
     ]),
+
+    updateUser(data) {
+      axios.put("/api/update_user", data).then(() => {
+        console.log("updated user yay");
+      });
+    },
     getSelf() {
       return new Promise((resolve, reject) => {
         var data = {
@@ -186,8 +221,8 @@ export default {
         };
         axios.post("/api/get_self", data).then(
           res => {
-            this.user = res.data.results[0];
-            this.userId = res.data.results[0].user_id;
+            this.etsyUser = res.data.results[0];
+            this.etsyId = res.data.results[0].user_id;
             resolve();
           },
           err => {
@@ -201,7 +236,7 @@ export default {
       var data = {
         token: this.token,
         secret: this.secret,
-        userId: this.userId
+        userId: this.etsyId
       };
       return new Promise((resolve, reject) => {
         axios.post("/api/get_shops", data).then(
@@ -429,6 +464,7 @@ export default {
         for (var k = 0; k < this.trans.length; k++) {
           if (this.trans[k].receipt_id == receipt_ids[p]) {
             this.filteredReceipts[p].quantity = this.trans[k].quantity;
+            this.filteredReceipts[p].listing_id = this.trans[k].listing_id;
             this.filteredReceipts[p].adjusted_grandtotal = Number(
               this.filteredReceipts[p].adjusted_grandtotal
             );
@@ -471,6 +507,28 @@ export default {
     StandardSelect
   },
   computed: {
+    totalSales() {
+      var sales = 0;
+      for (var i = 0; i < this.filteredReceipts.length; i++) {
+        sales += Number(this.filteredReceipts[i].adjusted_grandtotal);
+      }
+      return Number(Math.round(sales).toFixed(0));
+    },
+    totalRevenue() {
+      var revenue = 0;
+      for (var i = 0; i < this.filteredReceipts.length; i++) {
+        var listings = this.$store.state.userStore.userElement.listings;
+        var listing = listings.filter(list => {
+          return list.listing_id === this.filteredReceipts[i].listing_id;
+        });
+
+        revenue +=
+          Number(this.filteredReceipts[i].adjusted_grandtotal) -
+          Number(listing[0].production_cost) *
+            Number(this.filteredReceipts[i].quantity);
+      }
+      return Number(Math.round(revenue).toFixed(0));
+    },
     dateFrom() {
       return this.$store.state.dateFrom;
     },
@@ -491,6 +549,9 @@ export default {
     },
     secret() {
       return this.$route.query.secret;
+    },
+    user() {
+      return this.$store.state.userStore.user;
     },
     highlighted() {
       if (this.dateTo == "") {
@@ -764,5 +825,16 @@ button:hover {
 .tab.active .tab-bar {
   background: #47c3ad;
   transform: scaleX(1);
+}
+@media (max-width: 728px) {
+  .global-options-container {
+    position: relative;
+  }
+  .vdp-datepicker__calendar {
+    position: fixed !important;
+    left: 0 !important;
+    right: unset !important;
+    top: 170px !important;
+  }
 }
 </style>

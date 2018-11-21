@@ -59,7 +59,7 @@ var allowCrossDomain = function(req, res, next) {
 app.use(allowCrossDomain);
 
 app.use("/api/users", userRoutes);
-// app.use("/api/auth", authRoutes);
+
 
 //-------------------------------------------------------------
 
@@ -79,7 +79,7 @@ app.get("/api/auth", function(req, res) {
 });
 
 // Set domain and callback
-var domain = "http://192.168.1.2:8080";
+var domain = "http://192.168.0.8:8080";
 var callback = "/api/callback";
 
 // Instantiate OAuth object
@@ -111,7 +111,9 @@ app.post("/api/login", function(req, res) {
             var token = jwt.sign(
               {
                 id: result._id,
-                email: result.email
+                email: result.email,
+                token:result.token,
+                secret:result.secret
               },
               config.secret,
               {
@@ -194,6 +196,8 @@ app.put("/api/update_user", function(req, res) {
   );
 });
 
+
+
 app.get("/api/get-access-token", function(req, res) {
   console.log("*** get-access-token ***");
   // res.send("Hey");
@@ -237,7 +241,7 @@ app.get("/api/callback", function(req, res) {
 
           // test({ token, token_secret }, res);
           res.redirect(
-            "http://192.168.1.2:8080/connect?token=" +
+            "http://192.168.0.8:8080/connect?token=" +
               token +
               "&secret=" +
               token_secret
@@ -411,25 +415,6 @@ app.post("/api/get_shops", function(req, res) {
   );
 });
 
-function test(req, res) {
-  console.log("*** test ***");
-
-  oa.getProtectedResource(
-    "https://openapi.etsy.com/v2/users/__SELF__",
-    "GET",
-    req.token,
-    req.token_secret,
-    function(error, data, response) {
-      if (error) {
-        console.log(error);
-      } else {
-        // console.log(data);
-        console.log("*** SUCCESS! ***");
-        res.redirect("http://192.168.1.2:8080/connect");
-      }
-    }
-  );
-}
 
 //-------------------------------------------------------------
 

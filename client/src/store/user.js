@@ -7,16 +7,25 @@ var initialState = {
 
 export default {
   state: {
-    user: {}
+    user: {},
+    userElement:{}
   },
   mutations: {
     SET_USER(state, payload) {
       var user = payload;
       state.user = user;
+    },
+    SET_USER_ELEMENT(state,payload){
+      state.userElement = payload;
     }
   },
   getters: {},
   actions: {
+    getUser({state, commit}){
+      axios.get("/api/users/"+state.user.id).then(res=>{
+        commit("SET_USER_ELEMENT", res.data);
+      })
+    },
     setUser({ commit }, payload) {
       commit("SET_USER", payload);
     },

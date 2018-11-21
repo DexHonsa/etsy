@@ -37,6 +37,7 @@
                     <li @click="navigate('connect')" class="active">Home</li>
                     <li @click="navigate('listings')" class="active">Listings</li>
                     <li @click="logout" class="active">Logout</li>
+                    <li @click="unlink">Unlink Etsy Account</li>
                     
                 </ul>
             </div>
@@ -55,6 +56,11 @@ export default {
   componenets: {},
   mounted() {},
   methods: {
+    unlink() {
+      auth.unlinkAccount().then(() => {
+        window.location.reload();
+      });
+    },
     logout() {
       auth.logout();
     },

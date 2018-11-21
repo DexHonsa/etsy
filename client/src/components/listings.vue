@@ -1,7 +1,7 @@
 <template>
     <div class="container">
-        <div v-if="Object.keys(images).length == activeListings.length || imagesLoaded" class="listing-items">
-            <div  v-for="(list,i) in activeListings" :key="i" class="listing-item">
+        <div v-if="isLoaded" class="listing-items">
+            <div  v-for="(list,i) in userListings" :key="i" class="listing-item">
                 <div class="listing-image" :style="'background-image:url('+images[list.listing_id]+')'"></div>
                 
                 <div class="listing-title truncated">{{list.title}}</div>
@@ -11,12 +11,15 @@
                         <div class="detail-value">{{list.price}}</div>
                     </div>
                     <div class="listing-detail">
-                        <div class="detail-title">Cost to Make</div>
+                        <div class="detail-title">Production Cost</div>
                         <div class="detail-value">
                             <StandardInput
                                width="100px"
                                name="cost"
-                               
+                               type="number"
+                               :data="i"
+                               :value="list.production_cost || 0.00"
+                               :onBlur="changeInput"
                             />
                         </div>
                     </div>
@@ -36,7 +39,7 @@ export default {
   data() {
     return {
       images: [],
-      imagesLoaded: false
+      isLoaded: false
     };
   },
   components: {
@@ -44,21 +47,62 @@ export default {
   },
   mounted() {
     if (this.activeListings.length <= 0) {
-      this.getActiveListings().then(() => {
+      this.getActiveListings().then(listings => {
+        if (!this.checkUser()) {
+          var userListings = listings.map(list => {
+            return {
+              listing_id: list.listing_id,
+              title: list.title,
+              price: list.price
+            };
+          });
+          this.updateUser({ listings: userListings }).then(() => {
+            this.getUser();
+          });
+        }
         this.getListingImages().then(() => {
-          this.imagesLoaded = true;
+          this.isLoaded = true;
         });
       });
     } else {
       this.getListingImages().then(() => {
         setTimeout(() => {
-          this.imagesLoaded = true;
-        }, 100);
+          this.isLoaded = true;
+        }, 500);
       });
     }
   },
   methods: {
-    ...mapActions(["setActiveListings"]),
+    ...mapActions(["setActiveListings", "getUser"]),
+    checkUser() {
+      if (this.$store.state.userStore.userElement.listings == null) {
+        console.log("false");
+        return false;
+      } else {
+        console.log("true");
+        return true;
+      }
+    },
+    updateUser(update) {
+      var data = {
+        userId: this.$store.state.userStore.user.id,
+        update
+      };
+      return new Promise((resolve, reject) => {
+        axios.put("/api/update_user", data).then(() => {
+          resolve();
+          console.log("updated user yay");
+        });
+      });
+    },
+    changeInput(data, value) {
+      var formatted = Number(value).toFixed(2);
+      var listings = this.$store.state.userStore.userElement.listings;
+      listings[data].production_cost = formatted;
+      this.updateUser({ listings: listings });
+      this.getUser();
+      //  console.log(data, formatted);
+    },
     truncate(string) {
       if (string.length > 5) return string.substring(0, 5) + "...";
       else return string;
@@ -66,19 +110,26 @@ export default {
     getListingImages() {
       return new Promise(resolve => {
         var listingImages = {};
+        var promises = [];
         for (var i = 0; i < this.activeListings.length; i++) {
           var data = {
             token: this.token,
             secret: this.secret,
             listingId: this.activeListings[i].listing_id
           };
-          axios.post("/api/get_listing_images", data).then(res => {
-            listingImages[res.data.results[0].listing_id] =
-              res.data.results[0].url_fullxfull;
-          });
+          promises.push(axios.post("/api/get_listing_images", data));
         }
-        this.images = listingImages;
-        resolve();
+        Promise.map(
+          promises,
+          promise => {
+            listingImages[promise.data.results[0].listing_id] =
+              promise.data.results[0].url_fullxfull;
+          },
+          { concurrency: 10 }
+        ).then(() => {
+          this.images = listingImages;
+          resolve();
+        });
       });
     },
     getActiveListings() {
@@ -115,12 +166,12 @@ export default {
               this.setActiveListings(listings);
               console.log("finished listings");
               this.receiptsLoaded = true;
-              resolve();
+              resolve(listings);
             });
           } else {
             this.setActiveListings(listings);
             console.log("finished listings");
-            resolve();
+            resolve(listings);
           }
         });
       });
@@ -138,6 +189,9 @@ export default {
     },
     activeListings() {
       return this.$store.state.activeListings;
+    },
+    userListings() {
+      return this.$store.state.userStore.userElement.listings;
     }
   }
 };

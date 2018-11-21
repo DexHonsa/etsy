@@ -3,7 +3,7 @@
   <div>
     <div class="standard-input-title">{{field}}</div>
       
-      <input @input="inputChange" :autocomplete="name" data-vv-value-path="dValue" :data-vv-as="field" v-validate="isRequired" v-model="inputValue" :placeholder="placeholder" ref="input" :class="[{'input': true, 'is-danger': errors.has(name)}, activeClass]" :id="id" :type="type" :name="name" class="standard-input" />
+      <input @blur="inputBlur" @input="inputChange" :autocomplete="name" data-vv-value-path="dValue" :data-vv-as="field" v-validate="isRequired" v-model="inputValue" :placeholder="placeholder" ref="input" :class="[{'input': true, 'is-danger': errors.has(name)}, activeClass]" :id="id" :type="type" :name="name" class="standard-input" />
       <span v-show="errors.has(name)" class="help is-danger">{{ errors.first(name) }}</span>
     
   </div>
@@ -30,7 +30,9 @@ export default {
     "id",
     "passwordConfirm",
     "password",
-    "onChange"
+    "onChange",
+    "onBlur",
+    "data"
   ],
   mounted() {
     this.inputValue = this.value;
@@ -50,6 +52,13 @@ export default {
     inputChange() {
       if (this.onChange) {
         this.onChange(this.$refs.input.value);
+      }
+    },
+    inputBlur() {
+      if (this.data !== null) {
+        var formatted = Number(this.inputValue).toFixed(2);
+        this.inputValue = formatted;
+        this.onBlur(this.data, this.inputValue);
       }
     }
   }
