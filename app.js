@@ -337,6 +337,10 @@ app.post("/api/get_receipts", function(req, res) {
   );
 });
 
+app.get("/api/get_sample",function(req,res){
+  res.status(200).send("hello");
+})
+
 app.post("/api/get_all_receipts", function(req, res) {
   oa.getProtectedResource(
     "https://openapi.etsy.com/v2/shops/" +
