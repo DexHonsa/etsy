@@ -16,6 +16,8 @@ var oauth = require("oauth");
 var crypto = require("crypto");
 var config = require("./config");
 var ObjectId = require("mongodb").ObjectId;
+var axios = require("axios");
+var Promise = require("bluebird");
 
 var URL =
   "mongodb://dexhonsa:Awesomeo21!@theshopbutler-shard-00-00-cnt4l.mongodb.net:27017,theshopbutler-shard-00-01-cnt4l.mongodb.net:27017,theshopbutler-shard-00-02-cnt4l.mongodb.net:27017/main?ssl=true&replicaSet=TheShopButler-shard-0&authSource=admin&retryWrites=true";
@@ -59,7 +61,6 @@ var allowCrossDomain = function(req, res, next) {
 app.use(allowCrossDomain);
 
 app.use("/api/users", userRoutes);
-
 
 //-------------------------------------------------------------
 
@@ -112,8 +113,8 @@ app.post("/api/login", function(req, res) {
               {
                 id: result._id,
                 email: result.email,
-                token:result.token,
-                secret:result.secret
+                token: result.token,
+                secret: result.secret
               },
               config.secret,
               {
@@ -195,8 +196,6 @@ app.put("/api/update_user", function(req, res) {
     }
   );
 });
-
-
 
 app.get("/api/get-access-token", function(req, res) {
   console.log("*** get-access-token ***");
@@ -337,15 +336,206 @@ app.post("/api/get_receipts", function(req, res) {
   );
 });
 
-app.get("/api/get_sample",function(req,res){
-  res.status(200).send("hello");
-})
+app.get("/api/get_quantity", function(req, res) {
+  var token = "0bb6cba1d45402653e4341c1cb2ab1";
+  var secret = "229d903477";
+  var shopId = "18381424";
+
+  var r = [];
+  var t = [];
+
+  getAllReceipts().then(data => {
+    getAllTransactions().then(() => {
+      getQuantity().then(quantity => {
+        res.status(200).send(String(quantity));
+      });
+    });
+  });
+
+  function getQuantity() {
+    return new Promise(resolve => {
+      var receipt_ids = r.map(a => {
+        return a.receipt_id;
+      });
+      var newQuantity = 0;
+
+      for (var i = 0; i < t.length; i++) {
+        if (receipt_ids.includes(t[i].receipt_id)) {
+          newQuantity += t[i].quantity;
+        }
+      }
+
+      resolve(newQuantity);
+    });
+  }
+
+  function getAllReceipts() {
+    var data = {
+      token: token,
+      secret: secret,
+      shopId: shopId,
+      page: 1
+    };
+    return new Promise((resolve, reject) => {
+      axios
+        .post("http://localhost:3000/api/get_all_receipts_not_shipped", data)
+        .then(res2 => {
+          var receipts = res2.data.results;
+
+          //  if (res.data.count > 100) {
+          var promises = [];
+          var pages = Math.ceil(res2.data.count / 100);
+          // for (var i = 2; i <= pages; i++) {
+          //   data.page = i;
+          //   promises.push(
+
+          //   );
+          // }
+          var x = 2;
+          function myLoop() {
+            axios
+              .post("http://localhost:3000/api/get_all_receipts_not_shipped", {
+                token: token,
+                secret: secret,
+                shopId: shopId,
+                page: x
+              })
+              .then(item => {
+                receipts.push(...item.data.results);
+              });
+
+            setTimeout(function() {
+              if (x <= pages) {
+                // Promise.some(prom, 1).spread(function(item) {
+                //   receipts.push(...item.data.results);
+                // });
+
+                myLoop();
+              }
+              if (x == pages) {
+                setTimeout(() => {
+                  console.log("done with Receipts");
+                  r = receipts;
+                  resolve(receipts.length);
+                }, 6000);
+              }
+              x++;
+            }, 500);
+          }
+          myLoop();
+
+          // Promise.mapSeries(
+          //   promises,
+          //   promise => {
+          //     receipts.push(...promise.data.results);
+          //   }
+          //   // { concurrency: 1 }
+          // ).then(() => {
+          //   r = receipts;
+          //   console.log("finished receipts");
+          //   resolve();
+          // });
+          //  }
+        });
+    });
+  }
+  function getAllTransactions() {
+    var data = {
+      token: token,
+      secret: secret,
+      shopId: shopId,
+      page: 1
+    };
+    return new Promise((resolve, reject) => {
+      axios.post("http://localhost:3000/api/get_trans", data).then(res2 => {
+        var trans = res2.data.results;
+        // if (res.data.count > 100) {
+        var promises = [];
+        var pages = Math.ceil(res2.data.count / 100);
+
+        var x = 2;
+        function myLoop() {
+          axios
+            .post("http://localhost:3000/api/get_trans", {
+              token: token,
+              secret: secret,
+              shopId: shopId,
+              page: x
+            })
+            .then(item => {
+              trans.push(...item.data.results);
+            });
+
+          setTimeout(function() {
+            if (x <= pages) {
+              myLoop();
+            }
+            if (x == pages) {
+              setTimeout(() => {
+                console.log("done wth Trans");
+                t = trans;
+                resolve();
+              }, 6000);
+            }
+            x++;
+          }, 500);
+        }
+        myLoop();
+        // for (var i = 2; i <= pages; i++) {
+        //   data.page = i;
+        //   promises.push(
+        //     axios.post("http://localhost:3000/api/get_trans", {
+        //       token: token,
+        //       secret: secret,
+        //       shopId: shopId,
+        //       page: i
+        //     })
+        //   );
+        // }
+        // Promise.mapSeries(
+        //   promises,
+        //   function(promise) {
+        //     trans.push(...promise.data.results);
+        //   }
+        //   // { concurrency: 3 }
+        // ).then(() => {
+        //   t = trans;
+        //   console.log("finished Transactions");
+
+        //   resolve();
+        // });
+        // }
+      });
+    });
+  }
+});
 
 app.post("/api/get_all_receipts", function(req, res) {
   oa.getProtectedResource(
     "https://openapi.etsy.com/v2/shops/" +
       req.body.shopId +
       "/receipts?limit=100&page=" +
+      req.body.page,
+    "GET",
+    req.body.token,
+    req.body.secret,
+    function(error, data, response) {
+      if (error) {
+        console.log(error);
+      } else {
+        //console.log(data);
+        // console.log("*** SUCCESS! ***");
+        res.status(200).send(data);
+      }
+    }
+  );
+});
+
+app.post("/api/get_all_receipts_not_shipped", function(req, res) {
+  oa.getProtectedResource(
+    "https://openapi.etsy.com/v2/shops/" +
+      req.body.shopId +
+      "/receipts?was_shipped=false&limit=100&page=" +
       req.body.page,
     "GET",
     req.body.token,
@@ -418,7 +608,6 @@ app.post("/api/get_shops", function(req, res) {
     }
   );
 });
-
 
 //-------------------------------------------------------------
 
